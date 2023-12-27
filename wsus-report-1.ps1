@@ -1,7 +1,7 @@
 Param (
-[string]$UpdateServer = 'WSUS-SERVER', # This is the WSUS server name.
-[int]$Port = 8530, # This is the TCP port that use WSUS.
-[bool]$Secure = $False # Set this to TRUE if you use HTTPS to access WSUS service.
+    [string]$UpdateServer = 'WSUS-SERVER', # This is the WSUS server name.
+    [int]$Port = 8530, # This is the TCP port that use WSUS.
+    [bool]$Secure = $False # Set this to TRUE if you use HTTPS to access WSUS service.
 )
 $smtp = "SMTP_SERVER" # This is your SMTP Server
 $to1 = "securityGuy1@mydomain.com" # This is the recipient smtp address 1
@@ -15,16 +15,16 @@ $MsgBody = $MsgBody + "<title>All`s computers report on server:" + $UpdateServer
 $MsgBody = $MsgBody + "</HEAD>"
 $MsgBody = $MsgBody + "<BODY style=""font-family:'Courier New', Courier, monospace"">"
 
-$MsgBody= $MsgBody + "<h1>All`s computers report on server: " + $UpdateServer + "</h1>"
+$MsgBody = $MsgBody + "<h1>All`s computers report on server: " + $UpdateServer + "</h1>"
 $intLineCounter = 0 # To count computers.
 
 Remove-Item -force PcStatusReport.txt # This is a small log file to keep track of the last run results. It needs to be removed before start reading the list.
 
 If (-Not (Import-Module UpdateServices -PassThru)) {
-Add-Type -Path "$Env:ProgramFiles\Update Services\Api\Microsoft.UpdateServices.Administration.dll" -PassThru
+    Add-Type -Path "$Env:ProgramFiles\Update Services\Api\Microsoft.UpdateServices.Administration.dll" -PassThru
 }
 
-$Wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($UpdateServer,$Secure,$Port) # With this we get connected to the WSUS server.
+$Wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($UpdateServer, $Secure, $Port) # With this we get connected to the WSUS server.
 
 $CTScope = New-Object Microsoft.UpdateServices.Administration.ComputerTargetScope #This will the our scope, it includes all computers registered in the WSUS server.
 
@@ -50,67 +50,68 @@ $MsgBody = $MsgBody + "</tr>"
 
 $wsus.GetComputerTargets($CTScope) | Sort -Property FullDomainName | ForEach {
 
-$objSummary = $_.GetUpdateInstallationSummary() # This is an intermediate object that contains the details.
-$Down = $objSummary.DownloadedCount # This is the amount of updates that has been downloaded already.
-$Fail = $objSummary.FailedCount # This is the count for the failed updates.
-$Pend = $objSummary.InstalledPendingRebootCount # This is the number of updates that need to reboot to complete installation.
-$NotI = $objSummary.NotInstalledCount # These are the needed updates for this computer.
-$Unkn = $objSummary.UnknownCount # These are the updates that are waiting for detection on the first search.
-$Total = $Down + $Fail + $Pend + $NotI + $Unkn # Total amount of updates for this computer.
+    $objSummary = $_.GetUpdateInstallationSummary() # This is an intermediate object that contains the details.
+    $Down = $objSummary.DownloadedCount # This is the amount of updates that has been downloaded already.
+    $Fail = $objSummary.FailedCount # This is the count for the failed updates.
+    $Pend = $objSummary.InstalledPendingRebootCount # This is the number of updates that need to reboot to complete installation.
+    $NotI = $objSummary.NotInstalledCount # These are the needed updates for this computer.
+    $Unkn = $objSummary.UnknownCount # These are the updates that are waiting for detection on the first search.
+    $Total = $Down + $Fail + $Pend + $NotI + $Unkn # Total amount of updates for this computer.
 
-$intLineCounter = $intLineCounter + 1 # Increase the table line counter.
-$IntStr = [Convert]::ToString($intLineCounter) # convert it to string to put it on the HTML code.
+    $intLineCounter = $intLineCounter + 1 # Increase the table line counter.
+    $IntStr = [Convert]::ToString($intLineCounter) # convert it to string to put it on the HTML code.
 
-if ($Total -eq 0) {$Estado="OK"; $bgcolor="LightGreen"}
-elseif ($Pend -ne 0) {$Estado="Reboot needed"; $bgcolor="LightSalmon"}
-elseif ($Down -ne 0) {$Estado="Ready to install"; $bgcolor="Cyan"}
-elseif ($NotI -ne 0) {$Estado="Pending"; $bgcolor="Yellow"}
-elseif ($Fail -ne 0) {$Estado="Error"; $bgcolor="IndianRed"}
-elseif ($Unkn -ne 0) {$Estado="Not reported yet"; $bgcolor="Silver"}
-else {$Estado=""; $bgcolor="White"}
+    if ($Total -eq 0) { $Estado = "OK"; $bgcolor = "LightGreen" }
+    elseif ($Pend -ne 0) { $Estado = "Reboot needed"; $bgcolor = "LightSalmon" }
+    elseif ($Down -ne 0) { $Estado = "Ready to install"; $bgcolor = "Cyan" }
+    elseif ($NotI -ne 0) { $Estado = "Pending"; $bgcolor = "Yellow" }
+    elseif ($Fail -ne 0) { $Estado = "Error"; $bgcolor = "IndianRed" }
+    elseif ($Unkn -ne 0) { $Estado = "Not reported yet"; $bgcolor = "Silver" }
+    else { $Estado = ""; $bgcolor = "White" }
 
-Write-Verbose ($IntStr + " : " + $_.FullDomainName) -Verbose # Show task progress on screen.
+    Write-Verbose ($IntStr + " : " + $_.FullDomainName) -Verbose # Show task progress on screen.
 
-$LastContact = $_.LastReportedStatusTime # This is the last time when the computer reported to the wsus.
-$days = [Math]::Ceiling((New-TimeSpan -Start $LastContact).TotalDays) # This is the number of days since last time.
+    $LastContact = $_.LastReportedStatusTime # This is the last time when the computer reported to the wsus.
+    $days = [Math]::Ceiling((New-TimeSpan -Start $LastContact).TotalDays) # This is the number of days since last time.
 
-if ($days -gt 14) {$Color="Red"} # Computer is away for too long.
-elseif ($days -gt 7) {$Color="Orange"} # Computer may be in trouble.
-elseif ($days -gt 2) {$Color="Yellow"} # Computer may be off.
-else {$Color="White"} # Computer is ok.
+    if ($days -gt 14) { $Color = "Red" } # Computer is away for too long.
+    elseif ($days -gt 7) { $Color = "Orange" } # Computer may be in trouble.
+    elseif ($days -gt 2) { $Color = "Yellow" } # Computer may be off.
+    else { $Color = "White" } # Computer is ok.
 
-# Reformat days to a more human-readable form.
-if ($days -eq 0) {$Dias="Today"}
-elseif ($days -eq 1) {$Dias="Yesterday"}
-else {$Dias="Since " + $days + " days."}
+    # Reformat days to a more human-readable form.
+    if ($days -eq 0) { $Dias = "Today" }
+    elseif ($days -eq 1) { $Dias = "Yesterday" }
+    else { $Dias = "Since " + $days + " days." }
 
-if ($LastContact -eq [DateTime]::MinValue) {$Dias="Never"; $Color="Silver"}
+    if ($LastContact -eq [DateTime]::MinValue) { $Dias = "Never"; $Color = "Silver" }
 
-# Now write the table row with all the info.
-$MsgBody = $MsgBody + " <tr>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle""> " + $IntStr +" </td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle"" bgcolor=""" + $bgcolor + """> " + $Estado + " </td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle""> " + $_.FullDomainName+ " </td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle""> " + $_.IPAddress + " </td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle"" bgcolor=""" + $Color + """> " + $Dias +"</td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Total + "</td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Pend + "</td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Down + "</td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $NotI + "</td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Fail + "</td>"
-$MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Unkn + "</td>"
-$MsgBody = $MsgBody + "</tr>"
+    # Now write the table row with all the info.
+    $MsgBody = $MsgBody + " <tr>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle""> " + $IntStr + " </td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle"" bgcolor=""" + $bgcolor + """> " + $Estado + " </td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle""> " + $_.FullDomainName + " </td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle""> " + $_.IPAddress + " </td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle"" bgcolor=""" + $Color + """> " + $Dias + "</td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Total + "</td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Pend + "</td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Down + "</td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $NotI + "</td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Fail + "</td>"
+    $MsgBody = $MsgBody + "<td align=""center"" valign=""middle"">" + $Unkn + "</td>"
+    $MsgBody = $MsgBody + "</tr>"
 
-$_.FullDomainName >> PcStatusReport.txt # And append a new line on the log file.
+    $_.FullDomainName >> PcStatusReport.txt # And append a new line on the log file.
 }
 
 $MsgBody = $MsgBody + "</table><br>" # Finish the HTML table.
 
 if ($intLineCounter -eq 0) {
-Write-Verbose ("You must run this script from as administrator to read WSUS database.") -Verbose # Display a warning if not run with admin privileges.
-$MsgBody = $MsgBody + " You must run this script from as administrator to read WSUS database. <hr>"
-} else {
-$MsgBody = $MsgBody + "<hr>"
+    Write-Verbose ("You must run this script from as administrator to read WSUS database.") -Verbose # Display a warning if not run with admin privileges.
+    $MsgBody = $MsgBody + " You must run this script from as administrator to read WSUS database. <hr>"
+}
+else {
+    $MsgBody = $MsgBody + "<hr>"
 }
 
 #This is a footnote for the report readers.
