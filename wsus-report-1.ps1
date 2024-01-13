@@ -4,9 +4,7 @@ Param (
     [bool]$Secure = $False # Set this to TRUE if you use HTTPS to access WSUS service.
 )
 $smtp = "SMTP_SERVER" # This is your SMTP Server
-$to1 = "securityGuy1@mydomain.com" # This is the recipient smtp address 1
-$to2 = "securityGuy2@mydomain.com" # This is the recipient smtp address 2
-$to3 = "securityGuy3@mydomain.com" # This is the recipient smtp address 3
+$to = @("securityGuy1@mydomain.com","securityGuy2@mydomain.com") # This is the recipient smtp address. You can enter multiple adresses.
 $from = $UpdateServer + "<" + $UpdateServer + "@YOUR-DOMAIN>" # This will be the sender´s address identifying the WSUS server
 
 $MsgBody = "<HTML>"
@@ -38,7 +36,7 @@ $MsgBody = $MsgBody + "<th>Computer Name</th>"
 $MsgBody = $MsgBody + "<th>IP Address</th>"
 $MsgBody = $MsgBody + "<th>Last Contact</th>"
 $MsgBody = $MsgBody + "<th>Total updates</th>"
-$MsgBody = $MsgBody + "<th bgcolor=""LightSalmon "">Awaiting reboot</th>"
+$MsgBody = $MsgBody + "<th bgcolor=""LightSalmon"">Awaiting reboot</th>"
 $MsgBody = $MsgBody + "<th bgcolor=""Cyan"">Ready to install</th>"
 $MsgBody = $MsgBody + "<th bgcolor=""Yellow"">Download pending</th>"
 $MsgBody = $MsgBody + "<th bgcolor=""IndianRed"">Failed</th>"
@@ -48,7 +46,7 @@ $MsgBody = $MsgBody + "</tr>"
 
 # This is the main part: Here we will sort the list of computers by name, and get details for each one of them.
 
-$wsus.GetComputerTargets($CTScope) | Sort -Property FullDomainName | ForEach {
+$wsus.GetComputerTargets($CTScope) | Sort-Object -Property FullDomainName | ForEach-Object {
 
     $objSummary = $_.GetUpdateInstallationSummary() # This is an intermediate object that contains the details.
     $Down = $objSummary.DownloadedCount # This is the amount of updates that has been downloaded already.
@@ -138,6 +136,4 @@ $subject = $IntStr + " computers registered on the server " + $UpdateServer # Th
 $MsgBody = $MsgBody + "</BODY>"
 $MsgBody = $MsgBody + "</HTML>"
 
-# Now send the email message and thats all.
-#send-MailMessage -SmtpServer $smtp -To $to1, $to2, $to3 -From $from -Subject $subject -Body $MsgBody -BodyAsHtml -Priority high
-send-MailMessage -SmtpServer $smtp -To $to1, $to2 -From $from -Subject $subject -Body $MsgBody -BodyAsHtml -Priority high
+Send-MailMessage -SmtpServer $smtp -To $to -From $from -Subject $subject -Body $MsgBody -BodyAsHtml 
