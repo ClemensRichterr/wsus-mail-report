@@ -1,3 +1,4 @@
+$ErrorActionPreference = Stop
 Param (
     [string]$UpdateServer = 'WSUS-SERVER', # This is the WSUS server name.
     [int]$Port = 8530, # This is the TCP port that use WSUS.
