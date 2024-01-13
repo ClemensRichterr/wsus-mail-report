@@ -1,9 +1,9 @@
-$ErrorActionPreference = Stop
 Param (
     [string]$UpdateServer = 'WSUS-SERVER', # This is the WSUS server name.
     [int]$Port = 8530, # This is the TCP port that use WSUS.
     [bool]$Secure = $False # Set this to TRUE if you use HTTPS to access WSUS service.
 )
+$ErrorActionPreference = Stop
 $smtp = "SMTP_SERVER" # This is your SMTP Server
 $to = @("securityGuy1@mydomain.com","securityGuy2@mydomain.com") # This is the recipient smtp address. You can enter multiple adresses.
 $from = $UpdateServer + "<" + $UpdateServer + "@YOUR-DOMAIN>" # This will be the sender´s address identifying the WSUS server
